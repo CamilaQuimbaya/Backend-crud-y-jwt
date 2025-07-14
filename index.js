@@ -4,10 +4,13 @@ const express = require('express');
 const conectarDB = require('./config/db')
 const router = require('./routes/nota')
 const authRouter = require('./routes/auth')
+const cors = require('cors')
 
 const app = express();
 
 conectarDB(); // Conectar a la base de datos
+
+app.use(cors())
 
 const port = 3000;
 

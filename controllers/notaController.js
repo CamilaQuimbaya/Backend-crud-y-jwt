@@ -1,76 +1,98 @@
 const Nota = require('../models/Nota');
 
-// Create a new note
-exports.crearNota = async(req, res) =>{
+// Crear nota
+exports.crearNota = async (req, res) => {
     try {
-        let data_nota = new Nota(req.body);
-        await data_nota.save();
-        res.send(data_nota);
+        const nuevaNota = new Nota({
+            ...req.body,
+            usuario: req.usuario.id
+        });
+
+        await nuevaNota.save();
+        res.send(nuevaNota);
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: 'Error al crear la nota' });
     }
-}
+};
 
-exports.obtenerNotas = async(req, res) => {
+// Obtener todas las notas del usuario
+exports.obtenerNotas = async (req, res) => {
     try {
-        const data_notas = await Nota.find();
-        res.json(data_notas);
+        const notas = await Nota.find({ usuario: req.usuario.id }).sort({ fecha: -1 });
+        res.json(notas);
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: 'Error al obtener las notas'});
+        res.status(500).send({ message: 'Error al obtener las notas' });
     }
-}
+};
 
-exports.obtenerNotaPorId = async(req, res) => {
+// Obtener nota por ID (solo si pertenece al usuario)
+exports.obtenerNotaPorId = async (req, res) => {
     try {
-        const data_nota = await Nota.findById(req.params.id)
-        if(!data_nota){
-            res.status(404).json({message: 'Nota no encontrada'});
+        const nota = await Nota.findById(req.params.id);
+
+        if (!nota) {
+            return res.status(404).json({ message: 'Nota no encontrada' });
         }
 
-        res.json(data_nota);
+        if (nota.usuario.toString() !== req.usuario.id) {
+            return res.status(401).json({ message: 'No autorizado' });
+        }
+
+        res.json(nota);
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: 'Error al obtener la nota'});
+        res.status(500).send({ message: 'Error al obtener la nota' });
     }
-}
+};
+
+// Actualizar nota (solo si pertenece al usuario)
+exports.actualizarNota = async (req, res) => {
+  try {
+    const nota = await Nota.findById(req.params.id);
+
+    if (!nota) {
+      return res.status(404).json({ message: 'Nota no encontrada' });
+    }
+
+    if (nota.usuario.toString() !== req.usuario.id) {
+      return res.status(401).json({ message: 'No autorizado' });
+    }
+
+    const { titulo, nota: contenido, completed, background } = req.body;
+
+    const notaActualizada = await Nota.findByIdAndUpdate(
+      req.params.id,
+      { titulo, nota: contenido, completed, background },
+      { new: true }
+    );
+
+    res.json(notaActualizada);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'Error al actualizar la nota' });
+  }
+};
 
 
-exports.actualizarNota = async(req, res) => {
+// Eliminar nota (solo si pertenece al usuario)
+exports.eliminarNota = async (req, res) => {
     try {
-        const {titulo, nota} = req.body
-        let data_nota = await Nota.findById(req.params.id);
+        const nota = await Nota.findById(req.params.id);
 
-        if(!data_nota){
-            return res.status(404).json({message: 'Nota no encontrada'});
+        if (!nota) {
+            return res.status(404).json({ message: 'Nota no encontrada' });
         }
 
-        //actualizar esos campos de esa nota
-
-        data_nota = await Nota.findByIdAndUpdate(
-            {_id: req.params.id},
-            {titulo, nota},
-            {new: true } // Devuelve el objeto actualizado
-        );
-
-        res.json(data_nota);
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({message: 'Error al actualizar la nota'});
-    }
-}
-
-exports.eliminarNota = async(req, res) => {
-    try {
-        const data_nota = await Nota.findById(req.params.id);
-        if(!data_nota){
-            return res.status(404..json({message: 'Nota no encontrada'}))
+        if (nota.usuario.toString() !== req.usuario.id) {
+            return res.status(401).json({ message: 'No autorizado' });
         }
+
         await Nota.findByIdAndDelete(req.params.id);
-        res.json({message: 'Nota eliminada correctamente'})
+        res.json({ message: 'Nota eliminada correctamente' });
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: 'Error al eliminar la nota'});
+        res.status(500).send({ message: 'Error al eliminar la nota' });
     }
-}
+};
