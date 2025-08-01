@@ -8,7 +8,9 @@ const cors = require('cors')
 
 const app = express();
 
-conectarDB(); // Conectar a la base de datos
+if(process.env.NODE_ENV !== 'test'){
+    conectarDB(); // Conectar a la base de datos
+}
 
 app.use(cors())
 
@@ -27,6 +29,10 @@ app.get('/', (req, res) => {
 
 
 
-app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
-})
+if(require.main === module){
+        app.listen(port, () => {
+        console.log(`Servidor corriendo en http://localhost:${port}`);
+    })
+}
+
+module.exports = app; // Exportar la aplicación para pruebas
