@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  backend:
+    build: .
+    container_name: notas_api
+    ports:
+      - "3000:3000"      # host:contenedor
+    environment:
+      - PORT=3000
+      - DB_MONGO=mongodb+srv://cami123:cami1234@cluster0.oytph.mongodb.net/myNoteApp?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=miSuperClaveSecreta455!@@**
+    restart: unless-stopped
